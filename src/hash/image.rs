@@ -1,10 +1,13 @@
-use std::{cmp, hash, ops};
+use std::hash::Hasher;
+use std::{cmp, hash::{self, Hash}, ops};
+use std::collections::hash_map::DefaultHasher;
 
-use pyo3::{pyclass, pymethods, types::PyType, Bound};
+use pyo3::PyTypeInfo;
+use pyo3::{pyclass, pymethods, types::PyType, Bound, PyResult};
 
 use super::orientation::OrientationHash;
 
-static VERSION: u8 = 0x0001;
+// static VERSION: u8 = 0x0001;
 
 #[pyclass]
 #[derive(Clone)]
@@ -62,6 +65,10 @@ impl hash::Hash for ImageHash {
 
 #[pymethods]
 impl ImageHash {
+
+    #[classattr]
+    const VERSION: u8 = 0x0001;
+
     #[new]
     pub fn new() -> Self {
         ImageHash { hashes: Vec::new() }
@@ -79,7 +86,7 @@ impl ImageHash {
     }
 
     pub fn to_str(&self) -> String {
-        let mut hash = String::from(format!("{:#06x}", VERSION));
+        let mut hash = String::from(format!("{:#06x}", ImageHash::VERSION));
         let mut length_set = false;
         for individual_hash in self.hashes.iter().map(|h| h.to_str()) {
             if !length_set {
@@ -92,17 +99,15 @@ impl ImageHash {
     }
 
     #[classmethod]
-    pub fn from_str(_cls: &Bound<'_, PyType>, hash_str: &str) -> Self {
+    pub fn from_str(cls: &Bound<'_, PyType>, hash_str: &str) -> Self {
         let mut hashes: Vec<OrientationHash> = Vec::new();
         let version = u8::from_str_radix(&hash_str[0..6], 16).unwrap();
-        if version != VERSION {
+        if version != ImageHash::VERSION {
             panic!("Incorrect version");
         }
         let individual_hash_str_length = usize::from_str_radix(&hash_str[6..12], 16).unwrap();
         for index in (12..=hash_str.len() - 1).step_by(individual_hash_str_length) {
-            hashes.push(OrientationHash::from_str(
-                &hash_str[index..index + individual_hash_str_length],
-            ));
+            hashes.push(OrientationHash::from_str(&OrientationHash::type_object_bound(cls.py()), &hash_str[index..index + individual_hash_str_length]))
         }
         return ImageHash { hashes };
     }
@@ -115,4 +120,26 @@ impl ImageHash {
         }
         return computed_hash;
     }
+
+    fn __eq__(&self, other: &Self) -> PyResult<bool> {
+        for lhs in self.hashes.iter() {
+            for rhs in other.hashes.iter() {
+                if lhs == rhs {
+                    return Ok(true);
+                }
+            }
+        }
+        return Ok(false);
+    }
+
+    fn __str__(&self) -> String {
+        return self.to_str();
+    }
+
+    fn __hash__(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.hash(&mut hasher);
+        hasher.finish()
+    }
+
 }

@@ -1,7 +1,14 @@
 use pyo3::pyclass;
+use pyo3::pymethods;
+use pyo3::types::PyType;
+use pyo3::Bound;
+use pyo3::PyResult;
 
 use crate::utils::bin_to_hex;
 use crate::utils::hex_char_to_bin;
+use std::hash::DefaultHasher;
+use std::hash::{Hash, Hasher};
+use std::ops::Sub;
 use std::{cmp, hash, ops};
 
 #[pyclass]
@@ -63,8 +70,31 @@ impl hash::Hash for OrientationHash {
     }
 }
 
+#[pymethods]
 impl OrientationHash {
-    pub fn from_str(hash_str: &str) -> Self {
+
+    #[new]
+    pub fn new(hash_value: Vec<Vec<bool>>) -> Self {
+        return OrientationHash {hash: hash_value};
+    }
+
+    fn __str__(&self) -> String {
+        return self.to_str();
+    }
+
+    fn __hash__(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    fn __eq__(&self, other: &Self) -> PyResult<bool> {
+        let diff = OrientationHash::sub(<OrientationHash as Clone>::clone(&*self), other.clone());
+        return Ok(diff.unwrap() == 0);
+    }
+
+    #[classmethod]
+    pub fn from_str(_cls: &Bound<'_, PyType>, hash_str: &str) -> Self {
         let hash_size = ((hash_str.len() as f32) * 4.0).sqrt() as i32;
         let mut hash_vector: Vec<Vec<bool>> = Vec::new();
         let mut hash_index = 0;
@@ -97,7 +127,7 @@ impl OrientationHash {
         for item in self.hash.iter().flatten().enumerate() {
             let (index, value) = item;
             if *value {
-                computed_hash += i32::pow(2, index.try_into().unwrap());
+                computed_hash += i32::pow(2, (index % 8).try_into().unwrap());
             };
         }
         return computed_hash;

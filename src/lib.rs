@@ -1,17 +1,14 @@
+use hash::{image::ImageHash, orientation::OrientationHash};
 use pyo3::prelude::*;
+// use utils::{bin_to_hex, hex_char_to_bin};
 
 pub mod hash;
 pub mod utils;
 
-/// Formats the sum of two numbers as string.
-#[pyfunction]
-fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-    Ok((a + b).to_string())
-}
-
 /// A Python module implemented in Rust.
 #[pymodule]
-fn pymhash(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+fn _pymhash(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<OrientationHash>()?;
+    m.add_class::<ImageHash>()?;
     Ok(())
 }
