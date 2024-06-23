@@ -12,6 +12,7 @@ use super::orientation::OrientationHash;
 #[pyclass]
 #[derive(Clone)]
 pub struct ImageHash {
+    #[pyo3(get)]
     pub hashes: Vec<OrientationHash>,
 }
 
