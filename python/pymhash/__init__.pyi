@@ -1,4 +1,5 @@
 from typing import List
+from .lib import *
 
 class OrientationHash:
     def __init__(self, hash_value: List[List[bool]]) -> None: ...

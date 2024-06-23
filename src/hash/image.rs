@@ -101,12 +101,14 @@ impl ImageHash {
     #[classmethod]
     pub fn from_str(cls: &Bound<'_, PyType>, hash_str: &str) -> Self {
         let mut hashes: Vec<OrientationHash> = Vec::new();
-        let version = u8::from_str_radix(&hash_str[0..6], 16).unwrap();
+        let version_string = hash_str[0..6].strip_prefix("0x").unwrap();
+        let version = u8::from_str_radix(version_string, 16).unwrap();
         if version != ImageHash::VERSION {
             panic!("Incorrect version");
         }
-        let individual_hash_str_length = usize::from_str_radix(&hash_str[6..12], 16).unwrap();
-        for index in (12..=hash_str.len() - 1).step_by(individual_hash_str_length) {
+        let individual_hash_length_str = hash_str[6..12].strip_prefix("0x").unwrap();
+        let individual_hash_str_length = usize::from_str_radix(individual_hash_length_str, 16).unwrap();
+        for index in (12..=hash_str.len() - 1).step_by(individual_hash_str_length.try_into().unwrap()) {
             hashes.push(OrientationHash::from_str(&OrientationHash::type_object_bound(cls.py()), &hash_str[index..index + individual_hash_str_length]))
         }
         return ImageHash { hashes };

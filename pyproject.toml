@@ -10,7 +10,19 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
+dependencies = [
+    "opencv-python>=4.10.0.84",
+    "scipy>=1.13.1",
+    "exifread>=3.0.0"
+]
 dynamic = ["version"]
+authors = [
+  {name = "Rahul Singh", email = "grayhathacks10@gmail.com"},
+]
+description = "PymHash, Hash and compare images - find duplicates - ⚡ fast - 💾 efficient"
+readme = "README.md"
+license = {file = "LICENSE"}
+
 [tool.maturin]
 module-name = "pymhash._pymhash"
 python-source = "python"
