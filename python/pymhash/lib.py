@@ -31,7 +31,7 @@ class ImageFileMetadata(ImageBufferMetadata):
 
 T = TypeVar("T", bound=Metadata)
 
-def get_image_hash(image: cv2.typing.MatLike, hash_size: int = 8, highfreq_factor: int = 4) -> ImageHash: # type: ignore
+def get_image_hash(image: cv2.typing.MatLike, hash_size: int, highfreq_factor: int) -> ImageHash: # type: ignore
     img_size = hash_size * highfreq_factor
 
     sample = cv2.resize(image, (img_size, img_size))
@@ -65,7 +65,7 @@ def _get_exiftags(buffer: BinaryIO):
         print(traceback.format_exc())
     return exif_tags
 
-def _metadata_from_image_buffer(buffer: BinaryIO):
+def _metadata_from_image_buffer(buffer: BinaryIO, hash_size: int, highfreq_factor: int):
     file_bytes = np.asarray(bytearray(buffer.read()), dtype=np.uint8)
     image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     buffer.seek(0)
@@ -74,16 +74,16 @@ def _metadata_from_image_buffer(buffer: BinaryIO):
         height=image.shape[1],
         channels=image.shape[2],
         exiftags=_get_exiftags(buffer),
-        hash=get_image_hash(image)
+        hash=get_image_hash(image, hash_size=hash_size, highfreq_factor=highfreq_factor)
     )
 
-def _metadata_from_image_path(path: Union[str, Path]):
+def _metadata_from_image_path(path: Union[str, Path], hash_size: int, highfreq_factor: int):
     if not os.path.exists(path) or not os.path.isfile(path):
         raise ValueError(f"No file at {path=}")
     filename, extension = os.path.splitext(path)
     _, filename = os.path.split(filename)
     with open(path, "rb") as f:
-        buffer_meta = _metadata_from_image_buffer(f)
+        buffer_meta = _metadata_from_image_buffer(f, hash_size=hash_size, highfreq_factor=highfreq_factor)
         return ImageFileMetadata(
             width=buffer_meta.width,
             height=buffer_meta.height,
@@ -102,28 +102,28 @@ class PymHash(Generic[T]):
     
     @overload
     @classmethod
-    def from_image(cls, image: PathLike) -> 'PymHash[ImageFileMetadata]': ...
+    def from_image(cls, image: PathLike, hash_size: int =  ..., highfreq_factor: int =  ...) -> 'PymHash[ImageFileMetadata]': ...
 
     @overload
     @classmethod
-    def from_image(cls, image: BinaryIO) -> 'PymHash[ImageBufferMetadata]': ...
+    def from_image(cls, image: BinaryIO, hash_size: int =  ..., highfreq_factor: int =  ...) -> 'PymHash[ImageBufferMetadata]': ...
 
     @overload
     @classmethod
-    def from_image(cls, image: cv2.typing.MatLike) -> 'PymHash[Metadata]': ...
+    def from_image(cls, image: cv2.typing.MatLike, hash_size: int = ..., highfreq_factor: int = ...) -> 'PymHash[Metadata]': ...
 
     @classmethod
-    def from_image(cls, image: Union[PathLike, BinaryIO, cv2.typing.MatLike]):
+    def from_image(cls, image: Union[PathLike, BinaryIO, cv2.typing.MatLike], hash_size: int = 8, highfreq_factor: int = 4):
         if isinstance(image, (str, Path)):
-            return cls(_metadata_from_image_path(image))
+            return cls(_metadata_from_image_path(image, hash_size=hash_size, highfreq_factor=highfreq_factor))
         elif isinstance(cls, BinaryIO):
-            return cls(_metadata_from_image_buffer(image))
+            return cls(_metadata_from_image_buffer(image, hash_size=hash_size, highfreq_factor=highfreq_factor))
         elif type(image) == cv2.typing.MatLike:
             return cls(Metadata(
                 width=image.size[0],
                 height=image.size[1],
                 channels=image.size[2],
-                hash=get_image_hash(image)
+                hash=get_image_hash(image, hash_size=hash_size, highfreq_factor=highfreq_factor)
             ))
         else:
             raise ValueError("Invalid image")
