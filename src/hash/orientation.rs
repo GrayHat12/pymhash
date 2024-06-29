@@ -18,21 +18,23 @@ pub struct OrientationHash {
 }
 
 impl ops::Sub<OrientationHash> for OrientationHash {
-    type Output = Result<i32, &'static str>;
+    type Output = Result<f32, &'static str>;
 
     fn sub(self, rhs: OrientationHash) -> Self::Output {
         if self.hash.len() != rhs.hash.len() {
             Err("hash length should be same for both operands")
         } else {
-            let mut fallacies = 0;
+            let mut count = 0.0;
+            let mut fallacies = 0.0;
             for item in self.hash.iter().flatten().zip(rhs.hash.iter().flatten()) {
                 let (lhs, rhs) = item;
+                count += 1.0;
                 fallacies += match lhs == rhs {
-                    false => 1,
-                    _ => 0,
+                    false => 1.0,
+                    _ => 0.0,
                 };
             }
-            Ok(fallacies)
+            Ok(fallacies / count)
         }
     }
 }
@@ -90,7 +92,7 @@ impl OrientationHash {
 
     fn __eq__(&self, other: &Self) -> PyResult<bool> {
         let diff = OrientationHash::sub(<OrientationHash as Clone>::clone(&*self), other.clone());
-        return Ok(diff.unwrap() == 0);
+        return Ok(diff.unwrap() == 0.0);
     }
 
     #[classmethod]

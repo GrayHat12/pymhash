@@ -1,4 +1,5 @@
 use std::hash::Hasher;
+use std::ops::Sub;
 use std::{cmp, hash::{self, Hash}, ops};
 use std::collections::hash_map::DefaultHasher;
 
@@ -17,10 +18,10 @@ pub struct ImageHash {
 }
 
 impl ops::Sub<ImageHash> for ImageHash {
-    type Output = i32;
+    type Output = f32;
 
     fn sub(self, rhs: ImageHash) -> Self::Output {
-        let mut min_value = i32::MAX;
+        let mut min_value = f32::MAX;
         for lhs_hash in self.hashes {
             for rhs_hash in rhs.hashes.clone() {
                 let val = (lhs_hash.clone() - rhs_hash).unwrap();
@@ -29,7 +30,7 @@ impl ops::Sub<ImageHash> for ImageHash {
                 }
             }
         }
-        if min_value == i32::MAX {
+        if min_value == f32::MAX {
             panic!("No hashes to subtract");
         }
         return min_value;
@@ -133,6 +134,11 @@ impl ImageHash {
             }
         }
         return Ok(false);
+    }
+
+    fn __sub__(&self, other: &Self) -> PyResult<f32> {
+        let difference = self.clone().sub(other.clone());
+        return Ok(difference);
     }
 
     fn __str__(&self) -> String {

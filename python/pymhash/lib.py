@@ -5,7 +5,7 @@ import traceback
 import numpy as np
 from pathlib import Path
 from scipy import fftpack
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from . import ImageHash, OrientationHash
 from typing import TypeVar, Union, Generic, BinaryIO, overload
 
@@ -127,3 +127,28 @@ class PymHash(Generic[T]):
             ))
         else:
             raise ValueError("Invalid image")
+    
+    def __eq__(self, other: 'PymHash[Metadata]'):
+        if not isinstance(other, PymHash):
+            return False
+        return self.metadata.hash == other.metadata.hash
+    
+    def similar(self, other: 'PymHash[Metadata]', threshold: float = 0.01):
+        return (self.metadata.hash - other.metadata.hash) <= threshold
+
+    def to_dict(self):
+        dictionary = {}
+        for field in fields(self.metadata):
+            value = getattr(self.metadata, field.name)
+            if isinstance(value, ImageHash):
+                dictionary.update({field.name: value.to_str()})
+            else:
+                dictionary.update({field.name: value})
+        return dictionary
+    
+    @staticmethod
+    def asdict(data):
+        if isinstance(data, PymHash):
+            return data.to_dict()
+        else:
+            return data
