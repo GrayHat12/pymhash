@@ -1,20 +1,46 @@
+"""
+PymHash Hashing
+
+Base Hash Implementation (In Rust)
+"""
+
 from typing import List
-from .lib import *
 
 class OrientationHash:
-    def __init__(self, hash_value: List[List[bool]]) -> None: ...
+    """Class OrientationHash represents an orientation of image"""
+    def __init__(self, hash_value: List[List[bool]]) -> None: 
+        """
+        :param hash_value: boolean matrix
+        """
+        ...
     def __str__(self) -> str: ...
     def __hash__(self) -> int: ...
+    def __sub__(self, value: "OrientationHash") -> float: ...
     def __eq__(self, value: "OrientationHash") -> bool: ...
     @classmethod
-    def from_str(cls, hash_str: str) -> "OrientationHash": ...
-    def to_str(self) -> str: ...
+    def from_str(cls, hash_str: str) -> "OrientationHash": 
+        """
+        Convert Hash string to OrientationHash object
+
+        :param hash_str: Hash String
+        :return: OrientationHash
+        """
+        ...
+    def to_str(self) -> str: 
+        """
+        Convert OrientationHash object to str
+        
+        :return: str
+        """
+        ...
     def hash_size(self) -> int: ...
     def unique_hash(self) -> int: ...
 
 class ImageHash:
+    """Class Representing a single ImageHash containing 4 orientations of the image"""
 
     VERSION: int = ...
+    """Hash version"""
 
     def __init__(self) -> None: ...
     def add_hash(self, hash: OrientationHash) -> None: ...

@@ -84,6 +84,10 @@ impl OrientationHash {
         return self.to_str();
     }
 
+    fn __sub__(&self, other: &Self) -> PyResult<f32> {
+        return Ok(self.clone().sub(other.clone()).unwrap());
+    }
+
     fn __hash__(&self) -> u64 {
         let mut hasher = DefaultHasher::new();
         self.hash(&mut hasher);
