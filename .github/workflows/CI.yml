@@ -167,7 +167,8 @@ jobs:
       - run: pip install -e .
       # ADJUST THIS: build your documentation into docs/.
       # We use a custom build script for pdoc itself, ideally you just run `pdoc -o docs/ ...` here.
-      - run: pdoc pymhash --logo https://github.com/GrayHat12/pymhash/blob/master/docs/pymhash.png -o docs/
+      - run: pdoc pymhash --logo ./pymhash.png -o docs/
+      - run: cp ./docs/pymhash.png docs/
 
       - uses: actions/upload-pages-artifact@v3
         with:
